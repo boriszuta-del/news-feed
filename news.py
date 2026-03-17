@@ -3,22 +3,33 @@ import xml.etree.ElementTree as ET
 
 OUTPUT_FILE = "news.xml"
 
-def fetch_cnn():
-    url = "https://www.cnn.com/sitemap/news.xml"
-    res = requests.get(url)
-    root = ET.fromstring(res.text)
+def fetch_all_cnn():
+    urls = [
+        "https://www.cnn.com/sitemap/news.xml",
+        "https://www.cnn.com/sitemap/article.xml",
+        "https://www.cnn.com/sitemap/live-story.xml"
+    ]
 
-    items = []
-    for url in root.findall("{*}url"):
-        loc = url.find("{*}loc").text
-        lastmod = url.find("{*}lastmod").text
+    all_items = []
 
-        items.append({
-            "title": loc.split("/")[-1],
-            "link": loc,
-            "pubDate": lastmod
-        })
-    return items
+    for sitemap in urls:
+        try:
+            res = requests.get(sitemap, timeout=10)
+            root = ET.fromstring(res.text)
+
+            for url in root.findall("{*}url"):
+                loc = url.find("{*}loc").text
+                lastmod = url.find("{*}lastmod").text
+
+                all_items.append({
+                    "title": loc.split("/")[-1],
+                    "link": loc,
+                    "pubDate": lastmod
+                })
+        except:
+            continue
+
+    return all_items
 
 def build_rss(items):
     rss = ET.Element("rss", version="2.0")
