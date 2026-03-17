@@ -5,6 +5,9 @@ on:
     - cron: "*/10 * * * *"
   workflow_dispatch:
 
+permissions:
+  contents: write   # ⭐ 关键：解决 push 权限问题
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,23 +16,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install deps
         run: |
+          python -m pip install --upgrade pip
           pip install requests
 
       - name: Run script
         run: |
           python news.py
 
-      - name: Commit and push
+      - name: Commit changes
         run: |
-          git config user.name "bot"
-          git config user.email "bot@example.com"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
           git add news.xml
           git commit -m "update news" || echo "no changes"
           git push
