@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: 拉代码
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: 安装 Python 依赖
         run: |
