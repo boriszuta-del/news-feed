@@ -3,33 +3,31 @@ import xml.etree.ElementTree as ET
 
 OUTPUT_FILE = "news.xml"
 
-def fetch_all_cnn():
-    urls = [
-        "https://www.cnn.com/sitemap/news.xml",
-        "https://www.cnn.com/sitemap/article.xml",
-        "https://www.cnn.com/sitemap/live-story.xml"
-    ]
+def fetch_cnn():
+    url = "https://www.cnn.com/sitemap/news.xml"
+    res = requests.get(url, timeout=10)
 
-    all_items = []
+    if res.status_code != 200:
+        print("CNN 请求失败")
+        return []
 
-    for sitemap in urls:
-        try:
-            res = requests.get(sitemap, timeout=10)
-            root = ET.fromstring(res.text)
+    try:
+        root = ET.fromstring(res.text)
+    except:
+        print("XML 解析失败")
+        return []
 
-            for url in root.findall("{*}url"):
-                loc = url.find("{*}loc").text
-                lastmod = url.find("{*}lastmod").text
+    items = []
+    for url in root.findall("{*}url"):
+        loc = url.find("{*}loc").text
+        lastmod = url.find("{*}lastmod").text
 
-                all_items.append({
-                    "title": loc.split("/")[-1],
-                    "link": loc,
-                    "pubDate": lastmod
-                })
-        except:
-            continue
-
-    return all_items
+        items.append({
+            "title": loc.split("/")[-1],
+            "link": loc,
+            "pubDate": lastmod
+        })
+    return items
 
 def build_rss(items):
     rss = ET.Element("rss", version="2.0")
@@ -37,7 +35,7 @@ def build_rss(items):
 
     ET.SubElement(channel, "title").text = "CNN Latest News"
 
-    for item in items[:20]:  # 只取最新20条
+    for item in items[:20]:
         i = ET.SubElement(channel, "item")
         ET.SubElement(i, "title").text = item["title"]
         ET.SubElement(i, "link").text = item["link"]
@@ -49,7 +47,7 @@ def build_rss(items):
 def main():
     items = fetch_cnn()
     build_rss(items)
-    print("RSS 已生成：news.xml")
+    print("RSS updated")
 
 if __name__ == "__main__":
     main()
